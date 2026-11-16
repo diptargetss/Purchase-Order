@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAP ERP — Create Purchase Order (ME21N)</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f4f6f8;
+      color: #1d2d3e;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+    .sap-shell {
+      background: linear-gradient(90deg, #1b365d 0%, #224473 100%);
+    }
+    .sap-card {
+      background: #ffffff;
+      border: 1px solid #d9e0e7;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 2px rgba(27, 54, 93, 0.05);
+    }
+    .sap-input {
+      width: 100%;
+      border: 1px solid #bcc7d3;
+      border-radius: 0.375rem;
+      padding: 0.42rem 0.65rem;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      color: #1d2d3e;
+      background-color: #ffffff;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .sap-input:focus {
+      outline: none;
+      border-color: #0064d9;
+      box-shadow: 0 0 0 2px rgba(0, 100, 217, 0.16);
+    }
+    .sap-input[readonly], .sap-input-readonly {
+      background-color: #f1f4f8;
+      color: #475569;
+      border-color: #d5dde5;
+      cursor: default;
+    }
+    .sap-input-error {
+      border-color: #dc2626 !important;
+      background-color: #fef2f2 !important;
+    }
+    .badge-system {
+      background-color: #eef2f6;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+    .badge-prefill {
+      background-color: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+    .badge-initiator {
+      background-color: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #ffffff; }
+      .sap-card { box-shadow: none; border: 1px solid #cbd5e1; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- SAP Fiori Shell Bar -->
+  <header class="sap-shell text-white shadow-sm no-print sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="flex items-center justify-center w-9 h-9 rounded bg-white/15 border border-white/20 shrink-0">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-base sm:text-lg font-semibold tracking-tight truncate">Create Purchase Order</h1>
+            <span class="font-mono-code text-xs px-2 py-0.5 rounded bg-white/15 text-blue-100 border border-white/20">ME21N</span>
+          </div>
+          <p class="text-xs text-blue-100/80 truncate">SAP ERP Procurement &bull; CPM Service Order Workbench</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="btnParkedList" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded bg-white/10 hover:bg-white/20 border border-white/20 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          <span>Parked POs (<span id="parkedCount">0</span>)</span>
+        </button>
+        <button id="btnFieldGuide" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded bg-white/10 hover:bg-white/20 border border-white/20 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>27-Field Spec</span>
+        </button>
+        <button id="btnLoadSample" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded bg-sky-500 hover:bg-sky-400 text-white transition">
+          <span>Load Sample PO</span>
+        </button>
+        <button id="btnResetPO" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded bg-white/10 hover:bg-white/20 border border-white/20 transition">
+          <span>Clear</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 space-y-5">
+
+    <!-- Status & Validation Banner -->
+    <div id="messageBar" class="hidden rounded-lg border px-4 py-3 text-sm flex items-start justify-between gap-3">
+      <div class="flex items-start gap-2.5">
+        <span id="messageIcon" class="mt-0.5 shrink-0"></span>
+        <div>
+          <p id="messageTitle" class="font-semibold"></p>
+          <p id="messageBody" class="text-xs mt-0.5 opacity-90"></p>
+        </div>
+      </div>
+      <button id="btnCloseMessage" type="button" class="text-current opacity-60 hover:opacity-100 text-lg leading-none">&times;</button>
+    </div>
+
+    <!-- Document Overview Strip -->
+    <section class="sap-card p-4 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200">
+        <div class="flex flex-wrap items-center gap-3">
+          <div>
+            <span class="text-[11px] uppercase tracking-wider font-semibold text-slate-500 block">PO Number</span>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span id="displayPoNumber" class="font-mono-code text-lg font-bold text-slate-800">Pending (Auto-generated)</span>
+              <span class="text-[10px] font-medium px-1.5 py-0.5 rounded badge-system">System</span>
+            </div>
+          </div>
+          <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+          <div>
+            <span class="text-[11px] uppercase tracking-wider font-semibold text-slate-500 block">PO Status</span>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span id="displayPoStatus" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                Draft (Not Parked)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded badge-initiator">Initiator Entry</span>
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded badge-prefill">Pre-filled / Default</span>
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded badge-system">System-Generated</span>
+        </div>
+      </div>
+
+      <!-- Header Fields Grid -->
+      <div class="mt-4">
+        <button id="btnToggleHeader" type="button" class="flex items-center justify-between w-full text-left mb-3 group">
+          <h2 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
+            <svg id="headerChevron" class="w-4 h-4 text-slate-500 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+            Purchase Order Header &amp; Contract Details
+          </h2>
+          <span class="text-xs text-slate-500 group-hover:text-blue-600">Fields 1–8, 26–27</span>
+        </button>
+
+        <div id="headerSectionBody" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- 1. PO Type -->
+          <div>
+            <label for="poType" class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+              <span>PO Type <span class="text-red-500">*</span></span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded badge-initiator">Initiator</span>
+            </label>
+            <select id="poType" class="sap-input">
+              <option value="PO for CPM">PO for CPM</option>
+              <option value="Standard PO (NB)">Standard PO (NB)</option>
+              <option value="Service PO (ZSER)">Service PO (ZSER)</option>
+              <option value="Framework Order (FO)">Framework Order (FO)</option>
+            </select>
+          </div>
+
+          <!-- 3. Supplier Code -->
+          <div>
+            <label for="supplierCode" class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+              <span>Supplier Code <span class="text-red-500">*</span></span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded badge-initiator">Initiator</span>
+            </label>
+            <div class="flex gap-1.5">
+              <input id="supplierCode" type="text" class="sap-input font-mono-code" placeholder="e.g. 20000380" />
+              <button id="btnSupplierLookup" type="button" title="Search Supplier Master (F4)" class="px-2.5 py-1.5 rounded border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 shrink-0 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- 4. Supplier Name -->
+          <div class="sm:col-span-2">
+            <label for="supplierName" class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+              <span>Supplier Name</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded badge-system">Auto-filled Master</span>
+            </label>
+            <input id="supplierName" type="text" readonly class="sap-input sap-input-readonly" placeholder="Auto-filled from supplier master..." />
+          </div>
+
+          <!-- 5. Document Date -->
+          <div>
+            <label for="documentDate" class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+              <span>Document Date <span class="text-red-500">*</span></span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded badge-prefill">Pre-filled</span>
+            </label>
+            <input id="documentDate" type="date" class="sap-input" />
+          </div>
+
+          <!-- 6. Contract Number -->
+          <div>
+            <label for="contractNumber" class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+              <span>Contract Number <span class="text-red-500">*</span></span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded badge-initiator">Initiator</span>
+            </label>
+            <input id="contractNumber" type="text" class="sap-input font-mono-code" placeholder="e.g. CTP1&2" />
+          </div>
+
+          <!-- 7. Contract Type -->
+          <div>
+            <label for="contractType" class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+              <span>Contract Type <span class="text-red-500">*</span></span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded badge-initiator">Initiator</span>
+            </label>
+            <select id="contractType" class="sap-input">
+              <option value="Original">Original</option>
+              <option value="Variation / Amendment">Variation / Amendment</option>
+              <option value="Renewal">Renewal</option>
+            </select>
+          </div>
+
+          <!-- 8. Type of Contract -->
+          <div>
+            <label for="typeOfContract" class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+              <span>Type of Contract <span class="text-red-500">*</span></span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded badge-initiator">Initiator</span>
+            </label>
+            <select id="typeOfContract" class="sap-input">
+              <option value="OPEX">OPEX</option>
+              <option value="CAPEX">CAPEX</option>
+              <option value="AMC">AMC</option>
+            </select>
+          </div>
+
+          <!-- 26. User Group Code -->
+          <div>
+            <label for="userGroupCode" class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+              <span>User Group Code <span class="text-red-500">*</span></span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded badge-initiator">Initiator</span>
+            </label>
+            <select id="userGroupCode" class="sap-input font-mono-code">
+              <option value="TEST01">TEST01 — CPM Core Group</option>
+              <option value="CPM002">CPM002 — Infrastructure Ops</option>
+              <option value="FIN003">FIN003 — Corporate Finance</option>
+              <option value="PROC04">PROC04 — Central Procurement</option>
+            </select>
+          </div>
+
+          <!-- 2. PO Number (Mirror Input) -->
+          <div>
+            <label for="poNumberField" class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+              <span>PO Number</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded badge-system">System</span>
+            </label>
+            <input id="poNumberField" type="text" readonly class="sap-input sap-input-readonly font-mono-code" value="Pending (On Park)" />
+          </div>
+
+          <!-- 27. PO Status (Mirror Input) -->
+          <div class="sm:col-span-2">
+            <label for="poStatusField" class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+              <span>PO Status</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded badge-system">System</span>
+            </label>
+            <input id="poStatusField" type="text" readonly class="sap-input sap-input-readonly" value="Draft — Ready for Entry" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Item Overview Table -->
+    <section class="sap-card p-4 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div>
+          <h2 class="text-sm font-semibold text-slate-800">Item Overview (Fields 9–18)</h2>
+          <p class="text-xs text-slate-500">Select an item row to edit its Service Lines, G/L Account, Cost Center, and Tax Code below.</p>
+        </div>
+        <button id="btnAddItem" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white transition">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Add PO Item
+        </button>
+      </div>
+
+      <div class="overflow-x-auto border border-slate-200 rounded-md">
+        <table class="min-w-full divide-y divide-slate-200 text-xs">
+          <thead class="bg-slate-50 text-slate-600 font-semibold">
+            <tr>
+              <th class="px-2.5 py-2.5 text-left whitespace-nowrap">Item</th>
+              <th class="px-2.5 py-2.5 text-left whitespace-nowrap" title="Account Assignment Category">Acct. Assgn.</th>
+              <th class="px-2.5 py-2.5 text-left whitespace-nowrap" title="Item Category">Item Cat.</th>
+              <th class="px-2.5 py-2.5 text-left min-w-[140px]">Short Text *</th>
+              <th class="px-2.5 py-2.5 text-right whitespace-nowrap">PO Qty</th>
+              <th class="px-2.5 py-2.5 text-left whitespace-nowrap">Unit</th>
+              <th class="px-2.5 py-2.5 text-left whitespace-nowrap">Delivery Date</th>
+              <th class="px-2.5 py-2.5 text-right whitespace-nowrap">Net Price (Calc.)</th>
+              <th class="px-2.5 py-2.5 text-left whitespace-nowrap">Material Group</th>
+              <th class="px-2.5 py-2.5 text-left min-w-[155px]">Plant</th>
+              <th class="px-2.5 py-2.5 text-center whitespace-nowrap">Action</th>
+            </tr>
+          </thead>
+          <tbody id="itemsTableBody" class="divide-y divide-slate-200 bg-white"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Selected Item Details: Service Lines & Account Assignment -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <!-- Service Lines (Fields 19-22) -->
+      <div class="sap-card p-4 sm:p-5 lg:col-span-2">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div>
+            <h2 class="text-sm font-semibold text-slate-800">
+              Service Specifications — Item <span id="activeItemLabel" class="font-mono-code text-blue-700">10</span>
+            </h2>
+            <p class="text-xs text-slate-500">Fields 19–22 &bull; Service Line totals automatically roll up into Item Net Price.</p>
+          </div>
+          <button id="btnAddServiceLine" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-blue-600 text-blue-700 hover:bg-blue-50 transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Service Line
+          </button>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-md">
+          <table class="min-w-full divide-y divide-slate-200 text-xs">
+            <thead class="bg-slate-50 text-slate-600 font-semibold">
+              <tr>
+                <th class="px-3 py-2.5 text-left whitespace-nowrap">Service Line</th>
+                <th class="px-3 py-2.5 text-left min-w-[180px]">Service Description *</th>
+                <th class="px-3 py-2.5 text-right whitespace-nowrap">Service Qty *</th>
+                <th class="px-3 py-2.5 text-right whitespace-nowrap">Gross Price (&#8377;) *</th>
+                <th class="px-3 py-2.5 text-right whitespace-nowrap">Line Total (&#8377;)</th>
+                <th class="px-3 py-2.5 text-center whitespace-nowrap">Remove</th>
+              </tr>
+            </thead>
+            <tbody id="serviceLinesBody" class="divide-y divide-slate-200 bg-white"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Account Assignment & Tax (Fields 23-25) + Financial Summary -->
+      <div class="space-y-5">
+        <div class="sap-card p-4 sm:p-5">
+          <h2 class="text-sm font-semibold text-slate-800 mb-3">
+            Account Assignment &amp; Tax — Item <span id="activeItemAcctLabel" class="font-mono-code text-blue-700">10</span>
+          </h2>
+          <div class="space-y-3">
+            <!-- 23. G/L Account -->
+            <div>
+              <label for="glAccount" class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+                <span>G/L Account <span class="text-red-500">*</span></span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded badge-prefill">Proposed / Entry</span>
+              </label>
+              <select id="glAccount" class="sap-input font-mono-code">
+                <option value="6100008">6100008 — Contracted Services</option>
+                <option value="6100012">6100012 — Site Maintenance &amp; Ops</option>
+                <option value="6200045">6200045 — IT &amp; Software Services</option>
+                <option value="6300010">6300010 — Professional Consultancy</option>
+              </select>
+            </div>
+
+            <!-- 24. Cost Center -->
+            <div>
+              <label for="costCenter" class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+                <span>Cost Center <span class="text-red-500">*</span></span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded badge-initiator">Initiator</span>
+              </label>
+              <div class="flex gap-1.5">
+                <input id="costCenter" type="text" class="sap-input font-mono-code" placeholder="Enter or select Cost Center" list="costCenterOptions" />
+                <datalist id="costCenterOptions">
+                  <option value="*">* (Default / Wildcard)</option>
+                  <option value="CC-DEL-001">CC-DEL-001 (Head Office Delhi)</option>
+                  <option value="CC-CPM-101">CC-CPM-101 (CPM Operations)</option>
+                  <option value="CC-ENG-204">CC-ENG-204 (Engineering &amp; Projects)</option>
+                </datalist>
+              </div>
+            </div>
+
+            <!-- 25. Tax Code -->
+            <div>
+              <label for="taxCode" class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+                <span>Tax Code <span class="text-red-500">*</span></span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded badge-prefill">Select / Confirm</span>
+              </label>
+              <select id="taxCode" class="sap-input font-mono-code">
+                <option value="I7">I7 — Input GST 18%</option>
+                <option value="I5">I5 — Input GST 12%</option>
+                <option value="I2">I2 — Input GST 5%</option>
+                <option value="I0">I0 — Input GST 0% (Exempt)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="sap-card p-4 sm:p-5 bg-slate-50/70">
+          <h2 class="text-sm font-semibold text-slate-800 mb-3">PO Value Summary</h2>
+          <dl class="space-y-2 text-xs">
+            <div class="flex justify-between text-slate-600">
+              <dt>Total Net Value (Items)</dt>
+              <dd id="summaryNetValue" class="font-mono-code font-semibold text-slate-900">&#8377;10,00,000</dd>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <dt>Estimated Tax (<span id="summaryTaxRateLabel">I7 &bull; 18%</span>)</dt>
+              <dd id="summaryTaxValue" class="font-mono-code font-medium text-slate-800">&#8377;1,80,000</dd>
+            </div>
+            <div class="pt-2 border-t border-slate-200 flex justify-between items-baseline">
+              <dt class="text-sm font-semibold text-slate-800">Gross PO Value</dt>
+              <dd id="summaryGrossValue" class="font-mono-code text-base font-bold text-blue-700">&#8377;11,80,000</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Action Bar -->
+    <footer class="sap-card p-4 flex flex-wrap items-center justify-between gap-3 no-print">
+      <div class="text-xs text-slate-500">
+        <span class="font-medium text-slate-700">SAP ERP Validation:</span> Parking assigns the official PO Number and routes the order to <span class="font-medium text-slate-700">Parked / Pending approval</span>.
+      </div>
+      <div class="flex flex-wrap items-center gap-2.5">
+        <button id="btnCheckPO" type="button" class="px-4 py-2 text-xs sm:text-sm font-medium rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition">
+          Check / Validate
+        </button>
+        <button id="btnPrintPO" type="button" class="px-4 py-2 text-xs sm:text-sm font-medium rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition">
+          Print / Export Summary
+        </button>
+        <button id="btnParkPO" type="button" class="px-5 py-2 text-xs sm:text-sm font-semibold rounded-md bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition">
+          Park Purchase Order
+        </button>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Supplier Master Lookup Modal (F4) -->
+  <div id="supplierModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full overflow-hidden border border-slate-200">
+      <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-slate-800">Supplier Master Lookup (F4)</h3>
+        <button type="button" data-close-modal="supplierModal" class="text-slate-400 hover:text-slate-600 text-lg leading-none">&times;</button>
+      </div>
+      <div class="p-4 space-y-3">
+        <input id="supplierSearchInput" type="text" class="sap-input" placeholder="Filter by supplier code or name..." />
+        <div id="supplierListContainer" class="max-h-64 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-md"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 27-Field Classification Modal -->
+  <div id="fieldGuideModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full overflow-hidden border border-slate-200 flex flex-col max-h-[85vh]">
+      <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-slate-800">SAP Purchase Order — Consolidated 27-Field Classification</h3>
+        <button type="button" data-close-modal="fieldGuideModal" class="text-slate-400 hover:text-slate-600 text-lg leading-none">&times;</button>
+      </div>
+      <div class="p-4 overflow-y-auto">
+        <table class="min-w-full divide-y divide-slate-200 text-xs">
+          <thead class="bg-slate-50 text-slate-600 font-semibold">
+            <tr>
+              <th class="px-2.5 py-2 text-left">#</th>
+              <th class="px-2.5 py-2 text-left">SAP Field / Item</th>
+              <th class="px-2.5 py-2 text-left">Reference Value</th>
+              <th class="px-2.5 py-2 text-left">Responsibility / Population</th>
+            </tr>
+          </thead>
+          <tbody id="fieldGuideBody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Parked POs History Modal -->
+  <div id="parkedModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full overflow-hidden border border-slate-200 flex flex-col max-h-[80vh]">
+      <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-slate-800">Parked Purchase Orders (Session)</h3>
+        <button type="button" data-close-modal="parkedModal" class="text-slate-400 hover:text-slate-600 text-lg leading-none">&times;</button>
+      </div>
+      <div id="parkedListBody" class="p-4 overflow-y-auto space-y-2.5"></div>
+    </div>
+  </div>
+
+  <script>
+    // Master Data
+    const SUPPLIER_MASTER = [
+      { code: '20000380', name: 'Larsen & Turbo limited, Construction Division', city: 'Mumbai / Delhi' },
+      { code: '20000412', name: 'Tata Projects Limited, Industrial Infra', city: 'Hyderabad' },
+      { code: '20000509', name: 'Siemens Limited, Energy & Automation', city: 'Gurugram' },
+      { code: '20000621', name: 'Bharat Heavy Electricals Limited (BHEL)', city: 'New Delhi' }
+    ];
+
+    const TAX_RATES = {
+      I7: { label: 'I7 • 18%', rate: 0.18 },
+      I5: { label: 'I5 • 12%', rate: 0.12 },
+      I2: { label: 'I2 • 5%', rate: 0.05 },
+      I0: { label: 'I0 • 0%', rate: 0.00 }
+    };
+
+    const FIELD_SPEC = [
+      [1, 'PO Type', 'PO for CPM', 'Initiator selects; may be defaulted'],
+      [2, 'PO Number', '4000010695', 'System-generated on saving/parking'],
+      [3, 'Supplier Code', '20000380', 'Initiator enters/selects'],
+      [4, 'Supplier Name', 'Larsen & Turbo limited, Co…', 'Auto-filled from supplier master'],
+      [5, 'Document Date', '13.11.2026', 'Pre-filled (current date, ordinarily)'],
+      [6, 'Contract Number', 'CTP1&2', 'Initiator enters'],
+      [7, 'Contract Type', 'Original', 'Initiator selects'],
+      [8, 'Type of Contract', 'OPEX', 'Initiator selects'],
+      [9, 'Item Number', '10', 'System-generated'],
+      [10, 'Account Assignment Category', 'K', 'Initiator selects'],
+      [11, 'Item Category', 'D', 'Initiator selects'],
+      [12, 'Short Text', 'TEST', 'Initiator enters'],
+      [13, 'PO Quantity', '1.00', 'Initiator enters / confirms'],
+      [14, 'Unit', 'AU', 'Pre-filled or initiator-selected*'],
+      [15, 'Delivery Date', '13.11.2026', 'Initiator enters / confirms default*'],
+      [16, 'Net Price', '₹10,00,000', 'System-calculated from service lines'],
+      [17, 'Material Group', 'Others', 'Initiator selects'],
+      [18, 'Plant', 'Head Office – Delhi', 'Pre-filled or initiator-selected*'],
+      [19, 'Service Line', '10', 'System-generated sequence'],
+      [20, 'Service Description', 'TEST', 'Initiator enters'],
+      [21, 'Service Quantity', '100', 'Initiator enters'],
+      [22, 'Gross Price', '₹10,000', 'Initiator enters'],
+      [23, 'G/L Account', '6100008', 'Initiator enters or system-proposed*'],
+      [24, 'Cost Center', '*', 'Initiator enters/selects'],
+      [25, 'Tax Code', 'I7', 'Initiator selects or confirms default*'],
+      [26, 'User Group Code', 'TEST01', 'Initiator enters/selects'],
+      [27, 'PO Status', 'Parked / Pending approval', 'System-generated after parking']
+    ];
+
+    // Application State
+    let nextPoSequence = 4000010695;
+    let parkedOrders = [];
+    let state = createSampleState();
+
+    function createSampleState() {
+      return {
+        poNumber: null,
+        poStatus: 'Draft (Not Parked)',
+        poType: 'PO for CPM',
+        supplierCode: '20000380',
+        supplierName: 'Larsen & Turbo limited, Construction Division',
+        documentDate: '2026-11-13',
+        contractNumber: 'CTP1&2',
+        contractType: 'Original',
+        typeOfContract: 'OPEX',
+        userGroupCode: 'TEST01',
+        activeItemIndex: 0,
+        items: [
+          {
+            itemNumber: 10,
+            acctAssignment: 'K',
+            itemCategory: 'D',
+            shortText: 'TEST',
+            poQty: 1.00,
+            unit: 'AU',
+            deliveryDate: '2026-11-13',
+            materialGroup: 'Others',
+            plant: 'Head Office – Delhi',
+            glAccount: '6100008',
+            costCenter: '*',
+            taxCode: 'I7',
+            serviceLines: [
+              {
+                lineNumber: 10,
+                description: 'TEST',
+                quantity: 100,
+                grossPrice: 10000
+              }
+            ]
+          }
+        ]
+      };
+    }
+
+    function createBlankState() {
+      return {
+        poNumber: null,
+        poStatus: 'Draft (Not Parked)',
+        poType: 'PO for CPM',
+        supplierCode: '',
+        supplierName: '',
+        documentDate: '2026-11-17',
+        contractNumber: '',
+        contractType: 'Original',
+        typeOfContract: 'OPEX',
+        userGroupCode: 'TEST01',
+        activeItemIndex: 0,
+        items: [
+          {
+            itemNumber: 10,
+            acctAssignment: 'K',
+            itemCategory: 'D',
+            shortText: '',
+            poQty: 1.00,
+            unit: 'AU',
+            deliveryDate: '2026-11-17',
+            materialGroup: 'Others',
+            plant: 'Head Office – Delhi',
+            glAccount: '6100008',
+            costCenter: '*',
+            taxCode: 'I7',
+            serviceLines: [
+              {
+                lineNumber: 10,
+                description: '',
+                quantity: 1,
+                grossPrice: 0
+              }
+            ]
+          }
+        ]
+      };
+    }
+
+    // Formatters
+    function formatINR(num) {
+      const n = Number(num) || 0;
+      return '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    }
+
+    function calcItemNetPrice(item) {
+      return (item.serviceLines || []).reduce((sum, sl) => {
+        const qty = Number(sl.quantity) || 0;
+        const price = Number(sl.grossPrice) || 0;
+        return sum + qty * price;
+      }, 0);
+    }
+
+    // DOM Helpers
+    const $ = (id) => document.getElementById(id);
+
+    function showMessage(type, title, body) {
+      const bar = $('messageBar');
+      const icon = $('messageIcon');
+      bar.className = 'rounded-lg border px-4 py-3 text-sm flex items-start justify-between gap-3 ';
+      if (type === 'success') {
+        bar.className += 'bg-emerald-50 border-emerald-200 text-emerald-900';
+        icon.innerHTML = '<svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+      } else if (type === 'error') {
+        bar.className += 'bg-red-50 border-red-200 text-red-900';
+        icon.innerHTML = '<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+      } else {
+        bar.className += 'bg-blue-50 border-blue-200 text-blue-900';
+        icon.innerHTML = '<svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+      }
+      $('messageTitle').textContent = title;
+      $('messageBody').textContent = body;
+      bar.classList.remove('hidden');
+    }
+
+    function hideMessage() {
+      $('messageBar').classList.add('hidden');
+    }
+
+    function lookupSupplierName(code) {
+      const match = SUPPLIER_MASTER.find((s) => s.code === code.trim());
+      return match ? match.name : (code.trim() ? 'Unknown Supplier Code (Use F4 Lookup)' : '');
+    }
+
+    // Render Functions
+    function renderHeader() {
+      $('poType').value = state.poType;
+      $('supplierCode').value = state.supplierCode;
+      $('supplierName').value = state.supplierName;
+      $('documentDate').value = state.documentDate;
+      $('contractNumber').value = state.contractNumber;
+      $('contractType').value = state.contractType;
+      $('typeOfContract').value = state.typeOfContract;
+      $('userGroupCode').value = state.userGroupCode;
+
+      const poNumText = state.poNumber ? state.poNumber : 'Pending (Auto-generated)';
+      $('displayPoNumber').textContent = poNumText;
+      $('poNumberField').value = state.poNumber ? state.poNumber : 'Pending (On Park)';
+      $('poStatusField').value = state.poStatus;
+
+      const statusBadge = $('displayPoStatus');
+      if (state.poNumber) {
+        statusBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200';
+        statusBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>' + state.poStatus;
+      } else {
+        statusBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200';
+        statusBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>' + state.poStatus;
+      }
+    }
+
+    function renderItems() {
+      const tbody = $('itemsTableBody');
+      tbody.innerHTML = '';
+
+      state.items.forEach((item, idx) => {
+        const isActive = idx === state.activeItemIndex;
+        const netPrice = calcItemNetPrice(item);
+        const tr = document.createElement('tr');
+        tr.className = isActive ? 'bg-blue-50/70' : 'hover:bg-slate-50 cursor-pointer';
+        tr.dataset.itemIdx = idx;
+
+        tr.innerHTML = `
+          <td class="px-2.5 py-2 font-mono-code font-semibold text-slate-800 whitespace-nowrap">
+            <button type="button" class="select-item-btn inline-flex items-center gap-1 text-blue-700 hover:underline" data-idx="${idx}">
+              ${isActive ? '<span class="w-2 h-2 rounded-full bg-blue-600"></span>' : '<span class="w-2 h-2 rounded-full bg-slate-300"></span>'}
+              ${item.itemNumber}
+            </button>
+          </td>
+          <td class="px-2.5 py-2">
+            <select class="sap-input py-1 px-1.5 text-xs item-field" data-idx="${idx}" data-field="acctAssignment">
+              <option value="K" ${item.acctAssignment === 'K' ? 'selected' : ''}>K (Cost Center)</option>
+              <option value="A" ${item.acctAssignment === 'A' ? 'selected' : ''}>A (Asset)</option>
+              <option value="P" ${item.acctAssignment === 'P' ? 'selected' : ''}>P (Project)</option>
+              <option value="F" ${item.acctAssignment === 'F' ? 'selected' : ''}>F (Order)</option>
+            </select>
+          </td>
+          <td class="px-2.5 py-2">
+            <select class="sap-input py-1 px-1.5 text-xs item-field" data-idx="${idx}" data-field="itemCategory">
+              <option value="D" ${item.itemCategory === 'D' ? 'selected' : ''}>D (Service)</option>
+              <option value="Standard" ${item.itemCategory === 'Standard' ? 'selected' : ''}>Standard</option>
+              <option value="L" ${item.itemCategory === 'L' ? 'selected' : ''}>L (Subcontract)</option>
+            </select>
+          </td>
+          <td class="px-2.5 py-2">
+            <input type="text" class="sap-input py-1 px-2 text-xs item-field" data-idx="${idx}" data-field="shortText" value="${escapeHtml(item.shortText)}" placeholder="Short text..." />
+          </td>
+          <td class="px-2.5 py-2">
+            <input type="number" step="0.01" min="0.01" class="sap-input py-1 px-2 text-xs text-right font-mono-code w-20 item-field" data-idx="${idx}" data-field="poQty" value="${item.poQty}" />
+          </td>
+          <td class="px-2.5 py-2">
+            <select class="sap-input py-1 px-1.5 text-xs font-mono-code item-field" data-idx="${idx}" data-field="unit">
+              <option value="AU" ${item.unit === 'AU' ? 'selected' : ''}>AU</option>
+              <option value="EA" ${item.unit === 'EA' ? 'selected' : ''}>EA</option>
+              <option value="NOS" ${item.unit === 'NOS' ? 'selected' : ''}>NOS</option>
+              <option value="LOT" ${item.unit === 'LOT' ? 'selected' : ''}>LOT</option>
+            </select>
+          </td>
+          <td class="px-2.5 py-2">
+            <input type="date" class="sap-input py-1 px-1.5 text-xs item-field" data-idx="${idx}" data-field="deliveryDate" value="${item.deliveryDate}" />
+          </td>
+          <td class="px-2.5 py-2 text-right font-mono-code font-semibold text-slate-800 whitespace-nowrap" title="System-calculated from service lines">
+            ${formatINR(netPrice)}
+          </td>
+          <td class="px-2.5 py-2">
+            <select class="sap-input py-1 px-1.5 text-xs item-field" data-idx="${idx}" data-field="materialGroup">
+              <option value="Others" ${item.materialGroup === 'Others' ? 'selected' : ''}>Others</option>
+              <option value="Civil Works" ${item.materialGroup === 'Civil Works' ? 'selected' : ''}>Civil Works</option>
+              <option value="MEP Services" ${item.materialGroup === 'MEP Services' ? 'selected' : ''}>MEP Services</option>
+              <option value="IT & Software" ${item.materialGroup === 'IT & Software' ? 'selected' : ''}>IT &amp; Software</option>
+            </select>
+          </td>
+          <td class="px-2.5 py-2">
+            <select class="sap-input py-1 px-1.5 text-xs item-field" data-idx="${idx}" data-field="plant">
+              <option value="Head Office – Delhi" ${item.plant === 'Head Office – Delhi' ? 'selected' : ''}>Head Office – Delhi</option>
+              <option value="Regional Office – Mumbai" ${item.plant === 'Regional Office – Mumbai' ? 'selected' : ''}>Regional Office – Mumbai</option>
+              <option value="Site Plant – Bengaluru" ${item.plant === 'Site Plant – Bengaluru' ? 'selected' : ''}>Site Plant – Bengaluru</option>
+            </select>
+          </td>
+          <td class="px-2.5 py-2 text-center whitespace-nowrap">
+            <button type="button" class="remove-item-btn text-slate-400 hover:text-red-600 p-1 rounded ${state.items.length <= 1 ? 'opacity-30 cursor-not-allowed' : ''}" data-idx="${idx}" title="Delete Item" ${state.items.length <= 1 ? 'disabled' : ''}>
+              <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderActiveItemDetails() {
+      const item = state.items[state.activeItemIndex] || state.items[0];
+      $('activeItemLabel').textContent = item.itemNumber;
+      $('activeItemAcctLabel').textContent = item.itemNumber;
+
+      // Service Lines
+      const slBody = $('serviceLinesBody');
+      slBody.innerHTML = '';
+      item.serviceLines.forEach((sl, sIdx) => {
+        const lineTotal = (Number(sl.quantity) || 0) * (Number(sl.grossPrice) || 0);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-3 py-2 font-mono-code font-semibold text-slate-700">${sl.lineNumber}</td>
+          <td class="px-3 py-2">
+            <input type="text" class="sap-input py-1 px-2 text-xs sl-field" data-sidx="${sIdx}" data-field="description" value="${escapeHtml(sl.description)}" placeholder="Service description..." />
+          </td>
+          <td class="px-3 py-2">
+            <input type="number" min="0" step="1" class="sap-input py-1 px-2 text-xs text-right font-mono-code w-24 ml-auto sl-field" data-sidx="${sIdx}" data-field="quantity" value="${sl.quantity}" />
+          </td>
+          <td class="px-3 py-2">
+            <input type="number" min="0" step="0.01" class="sap-input py-1 px-2 text-xs text-right font-mono-code w-28 ml-auto sl-field" data-sidx="${sIdx}" data-field="grossPrice" value="${sl.grossPrice}" />
+          </td>
+          <td class="px-3 py-2 text-right font-mono-code font-semibold text-slate-800 whitespace-nowrap sl-total-cell">
+            ${formatINR(lineTotal)}
+          </td>
+          <td class="px-3 py-2 text-center">
+            <button type="button" class="remove-sl-btn text-slate-400 hover:text-red-600 p-1 ${item.serviceLines.length <= 1 ? 'opacity-30 cursor-not-allowed' : ''}" data-sidx="${sIdx}" ${item.serviceLines.length <= 1 ? 'disabled' : ''}>
+              &times;
+            </button>
+          </td>
+        `;
+        slBody.appendChild(tr);
+      });
+
+      // Account Assignment & Tax
+      $('glAccount').value = item.glAccount;
+      $('costCenter').value = item.costCenter;
+      $('taxCode').value = item.taxCode;
+
+      renderSummary();
+    }
+
+    function renderSummary() {
+      let totalNet = 0;
+      let totalTax = 0;
+      state.items.forEach((item) => {
+        const net = calcItemNetPrice(item);
+        const taxInfo = TAX_RATES[item.taxCode] || { rate: 0 };
+        totalNet += net;
+        totalTax += net * taxInfo.rate;
+      });
+
+      const activeItem = state.items[state.activeItemIndex] || state.items[0];
+      const activeTax = TAX_RATES[activeItem.taxCode] || { label: activeItem.taxCode, rate: 0 };
+
+      $('summaryNetValue').textContent = formatINR(totalNet);
+      $('summaryTaxRateLabel').textContent = activeTax.label;
+      $('summaryTaxValue').textContent = formatINR(totalTax);
+      $('summaryGrossValue').textContent = formatINR(totalNet + totalTax);
+      $('parkedCount').textContent = parkedOrders.length;
+    }
+
+    function renderAll() {
+      renderHeader();
+      renderItems();
+      renderActiveItemDetails();
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Validation
+    function validatePO() {
+      const errors = [];
+      if (!state.supplierCode.trim()) errors.push('Supplier Code is required.');
+      if (!state.documentDate) errors.push('Document Date is required.');
+      if (!state.contractNumber.trim()) errors.push('Contract Number is required.');
+      if (!state.userGroupCode.trim()) errors.push('User Group Code is required.');
+
+      state.items.forEach((item) => {
+        if (!item.shortText.trim()) errors.push(`Item ${item.itemNumber}: Short Text is required.`);
+        if (!item.costCenter.trim()) errors.push(`Item ${item.itemNumber}: Cost Center is required.`);
+        item.serviceLines.forEach((sl) => {
+          if (!sl.description.trim()) errors.push(`Item ${item.itemNumber} / Line ${sl.lineNumber}: Service Description is required.`);
+          if ((Number(sl.quantity) || 0) <= 0) errors.push(`Item ${item.itemNumber} / Line ${sl.lineNumber}: Service Quantity must be > 0.`);
+          if ((Number(sl.grossPrice) || 0) <= 0) errors.push(`Item ${item.itemNumber} / Line ${sl.lineNumber}: Gross Price must be > 0.`);
+        });
+      });
+
+      return errors;
+    }
+
+    // Event Wiring
+    function bindEvents() {
+      // Header inputs
+      $('poType').addEventListener('change', (e) => { state.poType = e.target.value; });
+      $('supplierCode').addEventListener('input', (e) => {
+        state.supplierCode = e.target.value;
+        state.supplierName = lookupSupplierName(state.supplierCode);
+        $('supplierName').value = state.supplierName;
+      });
+      $('documentDate').addEventListener('change', (e) => { state.documentDate = e.target.value; });
+      $('contractNumber').addEventListener('input', (e) => { state.contractNumber = e.target.value; });
+      $('contractType').addEventListener('change', (e) => { state.contractType = e.target.value; });
+      $('typeOfContract').addEventListener('change', (e) => { state.typeOfContract = e.target.value; });
+      $('userGroupCode').addEventListener('change', (e) => { state.userGroupCode = e.target.value; });
+
+      // Collapse header
+      $('btnToggleHeader').addEventListener('click', () => {
+        const body = $('headerSectionBody');
+        const chev = $('headerChevron');
+        body.classList.toggle('hidden');
+        chev.classList.toggle('-rotate-90');
+      });
+
+      // Items table delegation
+      $('itemsTableBody').addEventListener('click', (e) => {
+        const selectBtn = e.target.closest('.select-item-btn');
+        const removeBtn = e.target.closest('.remove-item-btn');
+        if (removeBtn) {
+          const idx = Number(removeBtn.dataset.idx);
+          if (state.items.length > 1) {
+            state.items.splice(idx, 1);
+            state.activeItemIndex = Math.max(0, Math.min(state.activeItemIndex, state.items.length - 1));
+            renderItems();
+            renderActiveItemDetails();
+          }
+          return;
+        }
+        if (selectBtn) {
+          state.activeItemIndex = Number(selectBtn.dataset.idx);
+          renderItems();
+          renderActiveItemDetails();
+          return;
+        }
+        const row = e.target.closest('tr[data-item-idx]');
+        if (row && !e.target.closest('input, select, button')) {
+          state.activeItemIndex = Number(row.dataset.itemIdx);
+          renderItems();
+          renderActiveItemDetails();
+        }
+      });
+
+      $('itemsTableBody').addEventListener('input', (e) => {
+        const el = e.target.closest('.item-field');
+        if (!el) return;
+        const idx = Number(el.dataset.idx);
+        const field = el.dataset.field;
+        state.items[idx][field] = el.type === 'number' ? Number(el.value) : el.value;
+      });
+
+      $('btnAddItem').addEventListener('click', () => {
+        const lastNum = state.items[state.items.length - 1]?.itemNumber || 0;
+        state.items.push({
+          itemNumber: lastNum + 10,
+          acctAssignment: 'K',
+          itemCategory: 'D',
+          shortText: '',
+          poQty: 1.00,
+          unit: 'AU',
+          deliveryDate: state.documentDate || '2026-11-17',
+          materialGroup: 'Others',
+          plant: 'Head Office – Delhi',
+          glAccount: '6100008',
+          costCenter: '*',
+          taxCode: 'I7',
+          serviceLines: [{ lineNumber: 10, description: '', quantity: 1, grossPrice: 0 }]
+        });
+        state.activeItemIndex = state.items.length - 1;
+        renderItems();
+        renderActiveItemDetails();
+      });
+
+      // Service lines delegation
+      $('serviceLinesBody').addEventListener('input', (e) => {
+        const el = e.target.closest('.sl-field');
+        if (!el) return;
+        const item = state.items[state.activeItemIndex];
+        const sIdx = Number(el.dataset.sidx);
+        const field = el.dataset.field;
+        item.serviceLines[sIdx][field] = el.type === 'number' ? Number(el.value) : el.value;
+
+        // Update row total inline without losing focus, then update item Net Price & summary
+        const tr = el.closest('tr');
+        const sl = item.serviceLines[sIdx];
+        tr.querySelector('.sl-total-cell').textContent = formatINR((Number(sl.quantity) || 0) * (Number(sl.grossPrice) || 0));
+
+        // Update item Net Price cell in items table
+        const itemRow = $('itemsTableBody').querySelector(`tr[data-item-idx="${state.activeItemIndex}"]`);
+        if (itemRow) {
+          itemRow.children[7].textContent = formatINR(calcItemNetPrice(item));
+        }
+        renderSummary();
+      });
+
+      $('serviceLinesBody').addEventListener('click', (e) => {
+        const btn = e.target.closest('.remove-sl-btn');
+        if (!btn) return;
+        const item = state.items[state.activeItemIndex];
+        const sIdx = Number(btn.dataset.sidx);
+        if (item.serviceLines.length > 1) {
+          item.serviceLines.splice(sIdx, 1);
+          renderItems();
+          renderActiveItemDetails();
+        }
+      });
+
+      $('btnAddServiceLine').addEventListener('click', () => {
+        const item = state.items[state.activeItemIndex];
+        const lastLine = item.serviceLines[item.serviceLines.length - 1]?.lineNumber || 0;
+        item.serviceLines.push({
+          lineNumber: lastLine + 10,
+          description: '',
+          quantity: 1,
+          grossPrice: 0
+        });
+        renderActiveItemDetails();
+      });
+
+      // Account assignment & Tax
+      $('glAccount').addEventListener('change', (e) => {
+        state.items[state.activeItemIndex].glAccount = e.target.value;
+      });
+      $('costCenter').addEventListener('input', (e) => {
+        state.items[state.activeItemIndex].costCenter = e.target.value;
+      });
+      $('taxCode').addEventListener('change', (e) => {
+        state.items[state.activeItemIndex].taxCode = e.target.value;
+        renderSummary();
+      });
+
+      // Actions
+      $('btnCloseMessage').addEventListener('click', hideMessage);
+
+      $('btnLoadSample').addEventListener('click', () => {
+        state = createSampleState();
+        renderAll();
+        showMessage('info', 'Sample PO Data Loaded', 'Loaded all reference values from SISL Variation (Supplier 20000380, Contract CTP1&2, ₹10,00,000 service line).');
+      });
+
+      $('btnResetPO').addEventListener('click', () => {
+        state = createBlankState();
+        renderAll();
+        hideMessage();
+      });
+
+      $('btnCheckPO').addEventListener('click', () => {
+        const errors = validatePO();
+        if (errors.length > 0) {
+          showMessage('error', `Validation Failed (${errors.length} issue${errors.length > 1 ? 's' : ''})`, errors.join(' | '));
+        } else {
+          showMessage('success', 'SAP Pre-Check Passed', 'All mandatory header, item, service line, and account assignment fields are valid and ready to park.');
+        }
+      });
+
+      $('btnParkPO').addEventListener('click', () => {
+        const errors = validatePO();
+        if (errors.length > 0) {
+          showMessage('error', 'Cannot Park Purchase Order', errors.join(' | '));
+          return;
+        }
+        if (!state.poNumber) {
+          state.poNumber = String(nextPoSequence++);
+        }
+        state.poStatus = 'Parked / Pending approval';
+        const snapshot = JSON.parse(JSON.stringify(state));
+        const existingIdx = parkedOrders.findIndex((p) => p.poNumber === snapshot.poNumber);
+        if (existingIdx >= 0) parkedOrders[existingIdx] = snapshot;
+        else parkedOrders.unshift(snapshot);
+
+        renderAll();
+        showMessage('success', `Purchase Order ${state.poNumber} Parked`, `Status updated to "${state.poStatus}" for Supplier ${state.supplierCode} (${state.supplierName}).`);
+      });
+
+      $('btnPrintPO').addEventListener('click', () => {
+        window.print();
+      });
+
+      // Modals
+      document.querySelectorAll('[data-close-modal]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          $(btn.dataset.closeModal).classList.add('hidden');
+        });
+      });
+
+      $('btnSupplierLookup').addEventListener('click', () => {
+        renderSupplierModal('');
+        $('supplierSearchInput').value = '';
+        $('supplierModal').classList.remove('hidden');
+      });
+
+      $('supplierSearchInput').addEventListener('input', (e) => {
+        renderSupplierModal(e.target.value);
+      });
+
+      $('btnFieldGuide').addEventListener('click', () => {
+        const body = $('fieldGuideBody');
+        body.innerHTML = FIELD_SPEC.map(([no, name, val, resp]) => `
+          <tr>
+            <td class="px-2.5 py-1.5 font-mono-code text-slate-500">${no}</td>
+            <td class="px-2.5 py-1.5 font-medium text-slate-800">${escapeHtml(name)}</td>
+            <td class="px-2.5 py-1.5 font-mono-code text-slate-700">${escapeHtml(val)}</td>
+            <td class="px-2.5 py-1.5 text-slate-600">${escapeHtml(resp)}</td>
+          </tr>
+        `).join('');
+        $('fieldGuideModal').classList.remove('hidden');
+      });
+
+      $('btnParkedList').addEventListener('click', () => {
+        const container = $('parkedListBody');
+        if (parkedOrders.length === 0) {
+          container.innerHTML = '<p class="text-xs text-slate-500 py-6 text-center">No Purchase Orders have been parked in this session yet. Click <strong>Park Purchase Order</strong> to generate PO Number 4000010695.</p>';
+        } else {
+          container.innerHTML = parkedOrders.map((po, idx) => {
+            const total = po.items.reduce((s, it) => s + calcItemNetPrice(it), 0);
+            return `
+              <div class="border border-slate-200 rounded-md p-3 flex flex-wrap items-center justify-between gap-3 hover:bg-slate-50">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono-code text-sm font-bold text-blue-700">${po.poNumber}</span>
+                    <span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">${escapeHtml(po.poStatus)}</span>
+                  </div>
+                  <p class="text-xs text-slate-600 mt-1">${escapeHtml(po.supplierCode)} — ${escapeHtml(po.supplierName)} &bull; Contract: <span class="font-mono-code">${escapeHtml(po.contractNumber)}</span></p>
+                </div>
+                <div class="text-right">
+                  <p class="font-mono-code text-sm font-semibold text-slate-800">${formatINR(total)}</p>
+                  <button type="button" class="load-parked-btn text-xs text-blue-600 hover:underline mt-0.5" data-pidx="${idx}">Open in Workbench</button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+        $('parkedModal').classList.remove('hidden');
+      });
+
+      $('parkedListBody').addEventListener('click', (e) => {
+        const btn = e.target.closest('.load-parked-btn');
+        if (!btn) return;
+        state = JSON.parse(JSON.stringify(parkedOrders[Number(btn.dataset.pidx)]));
+        $('parkedModal').classList.add('hidden');
+        renderAll();
+        showMessage('info', `Loaded Parked PO ${state.poNumber}`, `Status: ${state.poStatus}`);
+      });
+    }
+
+    function renderSupplierModal(query) {
+      const q = query.trim().toLowerCase();
+      const filtered = SUPPLIER_MASTER.filter((s) =>
+        s.code.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)
+      );
+      const container = $('supplierListContainer');
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-500 p-4 text-center">No matching suppliers found.</p>';
+        return;
+      }
+      container.innerHTML = filtered.map((s) => `
+        <button type="button" class="pick-supplier-btn w-full text-left px-3 py-2.5 hover:bg-blue-50 flex items-center justify-between gap-2 transition" data-code="${s.code}" data-name="${escapeHtml(s.name)}">
+          <div>
+            <span class="font-mono-code text-xs font-semibold text-blue-700">${s.code}</span>
+            <p class="text-xs font-medium text-slate-800">${escapeHtml(s.name)}</p>
+          </div>
+          <span class="text-[11px] text-slate-500 shrink-0">${escapeHtml(s.city)}</span>
+        </button>
+      `).join('');
+
+      container.querySelectorAll('.pick-supplier-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.supplierCode = btn.dataset.code;
+          state.supplierName = btn.dataset.name;
+          $('supplierCode').value = state.supplierCode;
+          $('supplierName').value = state.supplierName;
+          $('supplierModal').classList.add('hidden');
+        });
+      });
+    }
+
+    // Initialize
+    bindEvents();
+    renderAll();
+  </script>
+</body>
+</html>
